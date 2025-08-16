@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeri Foto Pribadi - Penyimpanan Foto</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .photo-card {
+            transition: all 0.3s ease;
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            box-shadow: 5px 5px 15px #d1d1d1, -5px -5px 15px #ffffff;
+        }
+        
+        .photo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 8px 8px 25px #d1d1d1, -8px -8px 25px #ffffff;
+        }
+        
+        .upload-area {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            transform: scale(1.02);
+        }
+        
+        .drag-over {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            border: 3px dashed #ffffff;
+        }
+        
+        .photo-preview {
+            object-fit: cover;
+            border-radius: 12px;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .header-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.4);
+        }
+        
+        .empty-state {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .search-input {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="header-gradient text-white py-6 shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/544fd54c-387d-49ab-9b69-945a0dfcd807.png" alt="Camera icon with lens and flash in purple gradient style representing photo gallery application" class="w-8 h-8 rounded-full">
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold">Galeri Foto Pribadi</h1>
+                        <p class="text-purple-200">Simpan dan kelola koleksi foto Anda</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-purple-200">Total Foto</div>
+                    <div class="text-2xl font-bold" id="photoCount">0</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Upload Section -->
+        <div class="mb-8">
+            <div class="upload-area rounded-2xl p-8 text-white text-center cursor-pointer" id="uploadArea">
+                <div class="mb-4">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/ea426393-6678-4b51-8d2e-0ee12029adc4.png" alt="Upload cloud icon with arrow pointing upward in white color on transparent background" class="mx-auto mb-4 opacity-80">
+                </div>
+                <h3 class="text-2xl font-bold mb-2">Unggah Foto Baru</h3>
+                <p class="text-purple-200 mb-4">Klik atau seret foto ke sini untuk mengunggah</p>
+                <input type="file" id="fileInput" accept="image/*" multiple class="hidden">
+                <button class="btn-primary text-white px-6 py-3 rounded-full font-semibold" onclick="document.getElementById('fileInput').click()">
+                    Pilih Foto
+                </button>
+            </div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="mb-8">
+            <div class="max-w-md mx-auto">
+                <input type="text" id="searchInput" placeholder="Cari foto berdasarkan nama..." 
+                       class="search-input w-full px-4 py-3 rounded-full border-none outline-none text-gray-700 shadow-lg">
+            </div>
+        </div>
+
+        <!-- Photos Grid -->
+        <div id="photosContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Photos will be dynamically inserted here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state rounded-2xl p-12 text-center text-white">
+            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/7d8d25a2-1656-4bd3-86d3-0e847cbacc86.png" alt="Empty photo gallery illustration with camera and placeholder frames in minimalist white line art style" class="mx-auto mb-6 opacity-80">
+            <h3 class="text-2xl font-bold mb-2">Belum Ada Foto</h3>
+            <p class="text-pink-200 mb-6">Mulai unggah foto pertama Anda untuk membangun galeri pribadi</p>
+            <button class="bg-white text-pink-500 px-6 py-3 rounded-full font-semibold hover:bg-pink-50 transition-colors" onclick="document.getElementById('fileInput').click()">
+                Unggah Foto Pertama
+            </button>
+        </div>
+    </div>
+
+    <!-- Photo Modal -->
+    <div id="photoModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50 p-4">
+        <div class="glass-effect rounded-2xl p-6 max-w-4xl max-h-full overflow-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800" id="modalPhotoName">Nama Foto</h3>
+                <button id="closeModal" class="text-gray-600 hover:text-gray-800 text-2xl">&times;</button>
+            </div>
+            <img id="modalPhoto" src="" alt="" class="w-full max-h-96 object-contain rounded-lg mb-4">
+            <div class="flex space-x-3">
+                <input type="text" id="editPhotoName" class="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                <button id="savePhotoName" class="btn-primary text-white px-6 py-2 rounded-lg font-semibold">
+                    Simpan
+                </button>
+                <button id="deletePhoto" class="btn-danger text-white px-6 py-2 rounded-lg font-semibold">
+                    Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class PhotoGallery {
+            constructor() {
+                this.photos = JSON.parse(localStorage.getItem('photoGallery')) || [];
+                this.currentPhotoId = null;
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.renderPhotos();
+                this.updatePhotoCount();
+            }
+
+            setupEventListeners() {
+                const fileInput = document.getElementById('fileInput');
+                const uploadArea = document.getElementById('uploadArea');
+                const searchInput = document.getElementById('searchInput');
+                const photoModal = document.getElementById('photoModal');
+                const closeModal = document.getElementById('closeModal');
+                const savePhotoName = document.getElementById('savePhotoName');
+                const deletePhoto = document.getElementById('deletePhoto');
+
+                // File input change
+                fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+
+                // Drag and drop
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('drag-over');
+                });
+
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('drag-over');
+                });
+
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('drag-over');
+                    this.handleFileSelect(e);
+                });
+
+                // Search
+                searchInput.addEventListener('input', (e) => this.searchPhotos(e.target.value));
+
+                // Modal events
+                closeModal.addEventListener('click', () => this.closePhotoModal());
+                photoModal.addEventListener('click', (e) => {
+                    if (e.target === photoModal) this.closePhotoModal();
+                });
+
+                savePhotoName.addEventListener('click', () => this.savePhotoName());
+                deletePhoto.addEventListener('click', () => this.deletePhoto());
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') this.closePhotoModal();
+                });
+            }
+
+            handleFileSelect(e) {
+                const files = e.target.files || e.dataTransfer.files;
+                
+                for (let file of files) {
+                    if (file.type.startsWith('image/')) {
+                        this.addPhoto(file);
+                    }
+                }
+            }
+
+            addPhoto(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const photo = {
+                        id: Date.now() + Math.random(),
+                        name: file.name.replace(/\.[^/.]+$/, ""),
+                        originalName: file.name,
+                        data: e.target.result,
+                        uploadDate: new Date().toLocaleDateString('id-ID'),
+                        size: this.formatFileSize(file.size)
+                    };
+
+                    this.photos.unshift(photo);
+                    this.saveToStorage();
+                    this.renderPhotos();
+                    this.updatePhotoCount();
+                };
+                reader.readAsDataURL(file);
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            renderPhotos(photosToRender = this.photos) {
+                const container = document.getElementById('photosContainer');
+                const emptyState = document.getElementById('emptyState');
+
+                if (photosToRender.length === 0) {
+                    container.innerHTML = '';
+                    emptyState.style.display = 'block';
+                    return;
+                }
+
+                emptyState.style.display = 'none';
+                container.innerHTML = photosToRender.map(photo => `
+                    <div class="photo-card rounded-2xl p-4 cursor-pointer fade-in-up" onclick="photoGallery.openPhotoModal('${photo.id}')">
+                        <div class="aspect-square mb-4 overflow-hidden rounded-xl bg-gray-200">
+                            <img src="${photo.data}" alt="${photo.name}" class="photo-preview w-full h-full">
+                        </div>
+                        <div class="text-center">
+                            <h3 class="font-bold text-gray-800 truncate mb-1">${photo.name}</h3>
+                            <div class="text-sm text-gray-500 space-y-1">
+                                <div>${photo.uploadDate}</div>
+                                <div>${photo.size}</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            openPhotoModal(photoId) {
+                const photo = this.photos.find(p => p.id == photoId);
+                if (!photo) return;
+
+                this.currentPhotoId = photoId;
+                document.getElementById('modalPhoto').src = photo.data;
+                document.getElementById('modalPhoto').alt = photo.name;
+                document.getElementById('modalPhotoName').textContent = photo.name;
+                document.getElementById('editPhotoName').value = photo.name;
+                document.getElementById('photoModal').classList.remove('hidden');
+                document.getElementById('photoModal').classList.add('flex');
+            }
+
+            closePhotoModal() {
+                document.getElementById('photoModal').classList.add('hidden');
+                document.getElementById('photoModal').classList.remove('flex');
+                this.currentPhotoId = null;
+            }
+
+            savePhotoName() {
+                if (!this.currentPhotoId) return;
+
+                const newName = document.getElementById('editPhotoName').value.trim();
+                if (!newName) return;
+
+                const photoIndex = this.photos.findIndex(p => p.id == this.currentPhotoId);
+                if (photoIndex !== -1) {
+                    this.photos[photoIndex].name = newName;
+                    this.saveToStorage();
+                    this.renderPhotos();
+                    this.closePhotoModal();
+                }
+            }
+
+            deletePhoto() {
+                if (!this.currentPhotoId) return;
+
+                if (confirm('Apakah Anda yakin ingin menghapus foto ini?')) {
+                    this.photos = this.photos.filter(p => p.id != this.currentPhotoId);
+                    this.saveToStorage();
+                    this.renderPhotos();
+                    this.updatePhotoCount();
+                    this.closePhotoModal();
+                }
+            }
+
+            searchPhotos(query) {
+                const filteredPhotos = this.photos.filter(photo => 
+                    photo.name.toLowerCase().includes(query.toLowerCase()) ||
+                    photo.originalName.toLowerCase().includes(query.toLowerCase())
+                );
+                this.renderPhotos(filteredPhotos);
+            }
+
+            updatePhotoCount() {
+                document.getElementById('photoCount').textContent = this.photos.length;
+            }
+
+            saveToStorage() {
+                localStorage.setItem('photoGallery', JSON.stringify(this.photos));
+            }
+        }
+
+        // Initialize the photo gallery
+        const photoGallery = new PhotoGallery();
+    </script>
+</body>
+</html>
+
